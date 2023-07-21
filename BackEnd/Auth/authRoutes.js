@@ -1,14 +1,30 @@
 const express = require("express");
+const { check } = require("express-validator");
 const router = express.Router();
 const authController = require("./authController");
+const asyncHandler = require("express-async-handler");
 
-// POST /api/auth/register
-router.post("/register", authController.registerUser);
+const validateRegistration = [
+  check("email").trim().isEmail().withMessage("Invalid email address"),
+  check("password")
+    .trim()
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+];
 
-// POST /api/auth/login
-router.post("/login", authController.loginUser);
+const validateLogin = [
+  check("email").trim().isEmail().withMessage("Invalid email address"),
+  check("password").trim().notEmpty().withMessage("Password is required"),
+];
 
-// POST /api/auth/logout
+router.post(
+  "/register",
+  validateRegistration,
+  asyncHandler(authController.registerUser)
+);
+
+router.post("/login", validateLogin, asyncHandler(authController.loginUser));
+
 router.post("/logout", authController.logoutUser);
 
 module.exports = router;
