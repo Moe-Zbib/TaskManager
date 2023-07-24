@@ -7,6 +7,11 @@ exports.registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    console.log("Incoming registration request:");
+    console.log("Username:", username);
+    console.log("Email:", email);
+    console.log("Password:", password);
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -24,6 +29,11 @@ exports.registerUser = async (req, res) => {
 
     await newUser.save();
 
+    console.log("New User Created:");
+    console.log("Username:", newUser.username);
+    console.log("Email:", newUser.email);
+    console.log("Password (hashed):", newUser.password);
+
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error registering user:", error.message);
@@ -37,6 +47,10 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    console.log("Incoming login request:");
+    console.log("Email:", email);
+    console.log("Password:", password);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -57,10 +71,15 @@ exports.loginUser = async (req, res) => {
       expiresIn: "1h",
     });
 
+    console.log("Session Token:", token);
+
+    console.log("User Logged In:");
+    console.log("Username:", user.username);
+    console.log("Email:", user.email);
+
     res.json({ token });
   } catch (error) {
     console.error("Error logging in user:", error);
-    // State the type of error in the response
     res.status(500).json({
       message: "An error occurred while logging in",
       errorType: error.name,

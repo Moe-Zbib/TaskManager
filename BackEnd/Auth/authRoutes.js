@@ -3,8 +3,10 @@ const { check } = require("express-validator");
 const router = express.Router();
 const authController = require("./authController");
 const asyncHandler = require("express-async-handler");
+const { authenticateUser } = require("./authMiddleware");
 
 const validateRegistration = [
+  check("username").trim().notEmpty().withMessage("Username is required"),
   check("email").trim().isEmail().withMessage("Invalid email address"),
   check("password")
     .trim()
@@ -25,6 +27,6 @@ router.post(
 
 router.post("/login", validateLogin, asyncHandler(authController.loginUser));
 
-router.post("/logout", authController.logoutUser);
+router.post("/logout", authenticateUser, authController.logoutUser);
 
 module.exports = router;

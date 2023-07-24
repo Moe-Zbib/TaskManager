@@ -1,5 +1,8 @@
+// Model/user.js
 const pool = require("../db");
 const bcrypt = require("bcryptjs");
+
+const SALT_ROUNDS = 10;
 
 class User {
   constructor({ user_id, username, email, password }) {
@@ -19,8 +22,8 @@ class User {
         return null;
       }
 
-      const { user_id, password } = rows[0];
-      return new User({ user_id, email, password });
+      const { user_id, username, password } = rows[0];
+      return new User({ user_id, username, email, password });
     } catch (error) {
       console.error("Error finding user:", error);
       throw error;
@@ -31,7 +34,9 @@ class User {
     try {
       const query =
         "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING user_id";
-      const values = [this.username, this.email, this.password];
+      const salt = await bcrypt.genSalt(SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(this.password, salt);
+      const values = [this.username, this.email, hashedPassword];
       const { rows } = await pool.query(query, values);
 
       if (rows.length > 0) {
