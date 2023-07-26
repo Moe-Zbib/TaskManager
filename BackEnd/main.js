@@ -1,24 +1,48 @@
 const express = require("express");
 const app = express();
 const authRoutes = require("./Auth/authRoutes");
+const cors = require("cors");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
+const session = require("express-session"); // Import express-session
 dotenv.config();
 
 const generateSecretKey = () => {
   return crypto.randomBytes(64).toString("hex");
 };
 
-//  generated secret key
+// Generate secret key and set it as the JWT_SECRET
 process.env.JWT_SECRET = generateSecretKey();
 
-const sessionMiddleware = require("./Auth/sessionMiddleware"); // session middleware
+// Use the session middleware with the required configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "my-secret", // Replace "my-secret" with a random string
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: false, // Set "true" for HTTPS connections
+      maxAge: 3600000, // 1 hour (time in milliseconds)
+    },
+  })
+);
 
 app.use(express.json());
-
-// Use the session middleware
-app.use(sessionMiddleware);
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use("/api/auth", authRoutes);
+
+// Route to handle user dashboard or another screen
+app.get("/dashboard", (req, res) => {
+  // Check if the user is logged in (session is active)
+  if (req.session.userId) {
+    // Render the dashboard or another screen for the logged-in user
+    res.send("Dashboard or Another Screen");
+  } else {
+    // Redirect to the login page if the user is not logged in
+    res.redirect("/login");
+  }
+});
+
 app.get("/api/test", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT 1 as result");

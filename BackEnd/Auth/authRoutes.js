@@ -24,7 +24,6 @@ router.post(
   validateRegistration,
   asyncHandler(authController.registerUser)
 );
-
 router.post("/login", validateLogin, asyncHandler(authController.loginUser));
 
 router.post("/logout", authenticateUser, authController.logoutUser);
