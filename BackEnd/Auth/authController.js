@@ -25,9 +25,6 @@ exports.registerUser = async (req, res) => {
 
     const newUser = new User({ username, email, password });
 
-    const salt = await bcrypt.genSalt(10);
-    newUser.password = await bcrypt.hash(password, salt);
-
     await newUser.save();
 
     console.log("New User Created:");
@@ -36,7 +33,7 @@ exports.registerUser = async (req, res) => {
     console.log("Password (hashed):", newUser.password);
 
     // Create a session token after successful registration
-    req.session.userId = newUser.id;
+    req.session.userId = newUser.user_id;
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -47,7 +44,6 @@ exports.registerUser = async (req, res) => {
     });
   }
 };
-
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -70,14 +66,23 @@ exports.loginUser = async (req, res) => {
         .json({ message: "Email or password are incorrect" });
     }
 
+    // Add this line to print the stored hashed password
+    console.log("Stored hashed password:", user.password);
+
     // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       // If passwords don't match, return an error response
+      console.log("Password comparison failed. Passwords don't match.");
       return res
         .status(401)
         .json({ message: "Email or password are incorrect" });
     }
+
+    // Passwords match, user is authenticated
+    console.log("Password comparison succeeded. User Logged In:");
+    console.log("Username:", user.username);
+    console.log("Email:", user.email);
 
     // Generate a JWT token with user ID and a secret key
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
@@ -85,10 +90,6 @@ exports.loginUser = async (req, res) => {
     });
 
     console.log("Session Token:", token);
-
-    console.log("User Logged In:");
-    console.log("Username:", user.username);
-    console.log("Email:", user.email);
 
     // Return the token in the response upon successful login
     res.json({ token });

@@ -35,8 +35,8 @@ class User {
       const query =
         "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING user_id";
       const salt = await bcrypt.genSalt(SALT_ROUNDS);
-      const hashedPassword = await bcrypt.hash(this.password, salt);
-      const values = [this.username, this.email, hashedPassword];
+      this.password = await bcrypt.hash(this.password, salt);
+      const values = [this.username, this.email, this.password];
       const { rows } = await pool.query(query, values);
 
       if (rows.length > 0) {
@@ -46,6 +46,10 @@ class User {
       console.error("Error saving user:", error);
       throw error;
     }
+  }
+
+  async comparePassword(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
   }
 }
 

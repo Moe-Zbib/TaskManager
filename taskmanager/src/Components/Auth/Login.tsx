@@ -61,7 +61,10 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/api/auth/login", formData);
+      const response = await axios.post(
+        "http://localhost:3001/api/auth/login",
+        formData
+      );
       console.log(response.data);
 
       // If login is successful, set the token in local storage for tracking user authentication
