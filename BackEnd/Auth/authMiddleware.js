@@ -1,31 +1,20 @@
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-dotenv.config();
-const authenticateUser = (req, res, next) => {
-  // Extract the token from the Authorization header
-  const token = req.header("Authorization")?.replace("Bearer ", "");
-  console.log("Token:", token);
 
-  // Check if the token is missing or invalid
+const authenticateUser = (req, res, next) => {
+  const token = req.header("Authorization");
+
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Access denied. Missing token." });
   }
 
   try {
-    // Verify the token using the JWT_SECRET from .env file
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded Token:", decoded);
-    // Set the authenticated user ID in the request object
-    req.userId = decoded.userId;
-
-    // Move to the next middleware or route handler
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decodedToken;
     next();
   } catch (error) {
-    console.error("Error verifying JWT:", error);
-    return res.status(401).json({ message: "Invalid token" });
+    console.error("Error verifying token:", error);
+    res.status(401).json({ message: "Invalid token." });
   }
 };
 
-module.exports = {
-  authenticateUser,
-};
+module.exports = { authenticateUser };

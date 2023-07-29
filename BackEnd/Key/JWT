@@ -18,8 +18,6 @@ const setJWTSecret = () => {
   }
 };
 
-// Call the function to set the JWT_SECRET
 setJWTSecret();
 
-// Export the JWT_SECRET
 module.exports = process.env.JWT_SECRET;

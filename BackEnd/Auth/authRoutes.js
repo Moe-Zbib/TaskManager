@@ -1,30 +1,49 @@
 const express = require("express");
-const { check } = require("express-validator");
+const { check, body } = require("express-validator");
 const router = express.Router();
 const authController = require("./authController");
 const asyncHandler = require("express-async-handler");
 const { authenticateUser } = require("./authMiddleware");
+const limiter = require("./rateLimiter");
 
+// Sanitize and validate registration inputs
 const validateRegistration = [
-  check("username").trim().notEmpty().withMessage("Username is required"),
-  check("email").trim().isEmail().withMessage("Invalid email address"),
-  check("password")
+  body("username")
+    .trim()
+    .notEmpty()
+    .withMessage("Username is required")
+    .escape(),
+  body("email").trim().isEmail().withMessage("Invalid email address").escape(),
+  body("password")
     .trim()
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
+    .withMessage("Password must be at least 6 characters long")
+    .escape(),
 ];
 
+// Sanitize and validate login inputs
 const validateLogin = [
-  check("email").trim().isEmail().withMessage("Invalid email address"),
-  check("password").trim().notEmpty().withMessage("Password is required"),
+  body("email").trim().isEmail().withMessage("Invalid email address").escape(),
+  body("password")
+    .trim()
+    .notEmpty()
+    .withMessage("Password is required")
+    .escape(),
 ];
 
 router.post(
   "/register",
+  limiter,
   validateRegistration,
   asyncHandler(authController.registerUser)
 );
-router.post("/login", validateLogin, asyncHandler(authController.loginUser));
+
+router.post(
+  "/login",
+  limiter,
+  validateLogin,
+  asyncHandler(authController.loginUser)
+);
 
 router.post("/logout", authenticateUser, authController.logoutUser);
 

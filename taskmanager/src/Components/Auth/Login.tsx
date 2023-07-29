@@ -43,6 +43,12 @@ const ErrorMsg = styled.div`
   margin-top: 10px;
 `;
 
+const AlertMsg = styled.div`
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+`;
+
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -75,7 +81,11 @@ const Login: React.FC = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error logging in:", error.response?.data);
-        setErrorMsg("Email or password are incorrect");
+        if (error.response?.status === 429) {
+          setErrorMsg("Too many requests, please try again later.");
+        } else {
+          setErrorMsg("Email or password are incorrect");
+        }
       } else {
         console.error("Unknown error:", error);
       }
@@ -104,7 +114,7 @@ const Login: React.FC = () => {
         />
         <Button type="submit">Login</Button>
       </Form>
-      {errorMsg && <ErrorMsg>{errorMsg}</ErrorMsg>}{" "}
+      {errorMsg && <ErrorMsg>{errorMsg}</ErrorMsg>}
     </Container>
   );
 };

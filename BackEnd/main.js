@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const helmet = require("helmet"); // Import the helmet middleware
 const authRoutes = require("./Auth/authRoutes");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -17,7 +18,7 @@ process.env.JWT_SECRET = generateSecretKey();
 // Use the session middleware with the required configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "my-secret", // Replace "my-secret" with a random string
+    secret: process.env.SESSION_SECRET || "my-secret",
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -28,6 +29,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(helmet()); // Use the helmet middleware here
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use("/api/auth", authRoutes);
 
