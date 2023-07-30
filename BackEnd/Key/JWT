@@ -2,15 +2,12 @@ const crypto = require("crypto");
 const dotenv = require("dotenv");
 dotenv.config();
 
-// A flag to check if the secret key has been generated
 let secretKeyGenerated = false;
 
-// Function to generate a random secure string (secret key)
 const generateSecretKey = () => {
   return crypto.randomBytes(64).toString("hex");
 };
 
-// Function to set the JWT_SECRET environment variable to the generated secret key
 const setJWTSecret = () => {
   if (!secretKeyGenerated) {
     process.env.JWT_SECRET = generateSecretKey();

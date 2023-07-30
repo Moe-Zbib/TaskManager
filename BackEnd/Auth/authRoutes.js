@@ -6,7 +6,6 @@ const asyncHandler = require("express-async-handler");
 const { authenticateUser } = require("./authMiddleware");
 const limiter = require("./rateLimiter");
 
-// Sanitize and validate registration inputs
 const validateRegistration = [
   body("username")
     .trim()
@@ -21,7 +20,6 @@ const validateRegistration = [
     .escape(),
 ];
 
-// Sanitize and validate login inputs
 const validateLogin = [
   body("email").trim().isEmail().withMessage("Invalid email address").escape(),
   body("password")
