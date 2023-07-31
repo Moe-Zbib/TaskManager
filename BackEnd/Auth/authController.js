@@ -3,15 +3,16 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const saltRounds = 12;
+const secretKey = require("../Key/JWT");
 exports.registerUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+
+  const { username, email, password } = req.body;
+
   try {
-    const { username, email, password } = req.body;
-
-    console.log("Incoming registration request:");
-    console.log("Username:", username);
-    console.log("Email:", email);
-    console.log("Password entered by the user:", password);
-
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const newUser = new User({
@@ -19,33 +20,53 @@ exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
     });
+
     await newUser.save();
     console.log("New User Created:");
     console.log("Username:", newUser.username);
     console.log("Email:", newUser.email);
-    const token = jwt.sign(
-      { userId: newUser.user_id },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+
+    const token = jwt.sign({ userId: newUser.user_id }, secretKey, {
+      expiresIn: "1h",
+    });
     console.log("Session Token:", token);
+
+    // Create a session token after successful login
     req.session.userId = newUser.user_id;
-    res.status(201).json({ message: "User registered successfully", token });
+
+    // Retrieve and return user tasks if needed
+    try {
+      const userTasks = await User.getTasksByUserId(newUser.user_id);
+      res.status(201).json({
+        message: "User registered successfully",
+        token,
+        tasks: userTasks,
+      });
+    } catch (error) {
+      console.error("Error retrieving user tasks:", error);
+      res.status(500).json({
+        message: "An error occurred while registering the user",
+        errorType: error.name,
+      });
+    }
   } catch (error) {
-    console.error("Error registering user:", error.message);
+    console.error("Error saving user:", error);
     res.status(500).json({
-      message: "An error occurred while registering the user",
+      message: "An error occurred while saving the user",
       errorType: error.name,
     });
   }
 };
 
 exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
 
+  const { email, password } = req.body;
+
+  try {
     const user = await User.findOne({ email });
     if (!user) {
       return res
@@ -67,14 +88,25 @@ exports.loginUser = async (req, res) => {
     console.log("Email:", user.email);
 
     // Generate a JWT with user ID and a secret key
-    const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user.user_id }, secretKey, {
       expiresIn: "1h",
     });
     console.log("Session Token:", token);
+
     // Create a session token after successful login
     req.session.userId = user.user_id;
-    // Return the token in the response upon successful login
-    res.json({ token });
+
+    // Retrieve and return user tasks if needed
+    try {
+      const userTasks = await User.getTasksByUserId(user.user_id);
+      res.json({ token, tasks: userTasks });
+    } catch (error) {
+      console.error("Error retrieving user tasks:", error);
+      res.status(500).json({
+        message: "An error occurred while logging in",
+        errorType: error.name,
+      });
+    }
   } catch (error) {
     console.error("Error logging in user:", error);
     res.status(500).json({

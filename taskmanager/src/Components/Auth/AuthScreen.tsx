@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Register from "./Auth/Register";
-import Login from "./Auth/Login";
+import Register from "./Register";
+import Login from "./Login";
 import styled from "styled-components";
 
 const ParentContainer = styled.div`

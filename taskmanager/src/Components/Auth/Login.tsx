@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -43,18 +44,13 @@ const ErrorMsg = styled.div`
   margin-top: 10px;
 `;
 
-const AlertMsg = styled.div`
-  color: red;
-  text-align: center;
-  margin-top: 10px;
-`;
-
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errorMsg, setErrorMsg] = useState(""); // State to hold the error message
+  const navigate = useNavigate(); // Add this line to get the navigate function
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -77,7 +73,7 @@ const Login: React.FC = () => {
       localStorage.setItem("token", response.data.token);
 
       // Redirect to the Home screen after successful login
-      window.location.href = "/home";
+      navigate("/AddTask"); // Use navigate function for redirection
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error logging in:", error.response?.data);

@@ -1,6 +1,7 @@
 const pool = require("../db");
 const bcrypt = require("bcryptjs");
 const SALT_ROUNDS = 12;
+const Task = require("./tasks");
 
 class User {
   constructor({ user_id, username, email, password }) {
@@ -8,6 +9,19 @@ class User {
     this.username = username;
     this.email = email;
     this.password = password;
+  }
+
+  static async getTasksByUserId(user_id) {
+    try {
+      const query = "SELECT * FROM tasks WHERE user_id = $1";
+      const values = [user_id];
+      const { rows } = await pool.query(query, values);
+
+      return rows.map((row) => new Task(row));
+    } catch (error) {
+      console.error("Error getting tasks for user:", error);
+      throw error;
+    }
   }
 
   static async findOne({ email }) {

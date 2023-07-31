@@ -66,7 +66,7 @@ const Register: React.FC = () => {
         password: "",
       });
       // Redirect to the "home" page after successful registration
-      navigate("/home");
+      navigate("/AddTask");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error registering user:", error.response?.data);

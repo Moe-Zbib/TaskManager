@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const helmet = require("helmet");
 const authRoutes = require("./Auth/authRoutes");
+const taskRoutes = require("./Tasks/taskRoutes");
+
 const cors = require("cors");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
@@ -36,6 +38,7 @@ app.get("/dashboard", (req, res) => {
   }
 });
 
+app.use("/api/task", taskRoutes);
 app.get("/api/test", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT 1 as result");
