@@ -47,9 +47,9 @@ const AuthScreen: React.FC = () => {
     <ParentContainer>
       <Container>
         <Heading>Authentication Screen</Heading>
-        {isRegister ? <Register /> : <Login />}
+        {isRegister ? <Login /> : <Register />}
         <ToggleButton onClick={handleToggleAuth}>
-          {isRegister ? "Switch to Login" : "Switch to Register"}
+          {isRegister ? "Switch to Register" : "Switch to Login"}
         </ToggleButton>
       </Container>
     </ParentContainer>

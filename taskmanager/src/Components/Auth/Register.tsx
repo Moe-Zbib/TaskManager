@@ -38,44 +38,57 @@ const Button = styled.button`
   cursor: pointer;
 `;
 
+const ErrorMsg = styled.div`
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+`;
+
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
+  const [errorMsg, setErrorMsg] = useState(""); // State to hold the error message
+  const navigate = useNavigate(); // Add this line to get the navigate function
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     try {
       const response = await axios.post(
         "http://localhost:3001/api/auth/register",
         formData
       );
-      console.log("Response from the backend:", response.data);
-      console.log("Session Token:", response.data.sessionToken);
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-      });
-      // Redirect to the "home" page after successful registration
-      navigate("/AddTask");
+      console.log(response.data);
+
+      // If registration is successful, set the token in local storage for tracking user authentication
+      localStorage.setItem("token", response.data.token);
+
+      // Redirect to the Home screen after successful registration
+      navigate("/AddTask"); // Use navigate function for redirection
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error registering user:", error.response?.data);
+        if (error.response?.status === 429) {
+          setErrorMsg("Too many requests, please try again later.");
+        } else {
+          setErrorMsg("An error occurred while registering the user.");
+        }
       } else {
         console.error("Unknown error:", error);
       }
     }
   };
-  console.log("Rendered component. Form data:", formData);
+
   return (
     <Container>
       <Heading>Register</Heading>
@@ -106,7 +119,9 @@ const Register: React.FC = () => {
         />
         <Button type="submit">Register</Button>
       </Form>
+      {errorMsg && <ErrorMsg>{errorMsg}</ErrorMsg>}
     </Container>
   );
 };
+
 export default Register;

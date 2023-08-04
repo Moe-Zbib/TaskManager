@@ -22,6 +22,26 @@ class Task {
     this.side_notes = side_notes;
   }
 
+  static sortByDueTimeAscending(tasks) {
+    return tasks.sort((a, b) => new Date(a.due_time) - new Date(b.due_time));
+  }
+
+  static sortByDueTimeDescending(tasks) {
+    return tasks.sort((a, b) => new Date(b.due_time) - new Date(a.due_time));
+  }
+
+  static sortByCreationTimeAscending(tasks) {
+    return tasks.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+  }
+
+  static sortByCreationTimeDescending(tasks) {
+    return tasks.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+  }
+
   static async createTask(user_id, title, description, due_time, side_notes) {
     try {
       const query =
@@ -45,6 +65,23 @@ class Task {
       return rows.map((row) => new Task(row));
     } catch (error) {
       console.error("Error getting tasks for user:", error);
+      throw error;
+    }
+  }
+
+  static async getTaskByTitleAndUserId(title, user_id) {
+    try {
+      const query = "SELECT * FROM tasks WHERE title = $1 AND user_id = $2";
+      const values = [title, user_id];
+      const { rows } = await pool.query(query, values);
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      return new Task(rows[0]);
+    } catch (error) {
+      console.error("Error getting task by title and user ID:", error);
       throw error;
     }
   }

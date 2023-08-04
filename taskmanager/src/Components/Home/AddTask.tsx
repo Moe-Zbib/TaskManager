@@ -79,7 +79,7 @@ interface Task {
   description: string;
   done: boolean;
   due_time: string;
-  created_at: string; // New property to store the task creation date
+  created_at: string;
   side_notes: string;
 }
 
@@ -92,10 +92,22 @@ const TaskList: React.FC<{
   tasks: Task[];
   onEditTask: (taskId: number) => void;
   onDeleteTask: (taskId: number) => void;
-  onToggleTask: (taskId: number, done: boolean) => void; // New function to toggle task completion status
-}> = ({ tasks, onEditTask, onDeleteTask, onToggleTask }) => {
+  onToggleTask: (taskId: number, done: boolean) => void;
+  onSortChange: (sortOption: string, sortOrder: string) => void;
+}> = ({ tasks, onEditTask, onDeleteTask, onToggleTask, onSortChange }) => {
   return (
     <TaskListContainer>
+      <div>
+        <label>Sort By:</label>
+        <select onChange={(e) => onSortChange(e.target.value, "asc")}>
+          <option value="due_time">Due Time</option>
+          <option value="created_at">Created At</option>
+        </select>
+        <select onChange={(e) => onSortChange("due_time", e.target.value)}>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
       {tasks.map((task) => (
         <TaskItem key={task.task_id}>
           <TaskText>
@@ -130,18 +142,24 @@ const AddTask: React.FC = () => {
   const [description, setDescription] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [sideNotes, setSideNotes] = useState("");
+  const [sortOption, setSortOption] = useState<string>("due_time");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [sortOption, sortOrder]);
 
   const fetchTasks = async () => {
     try {
       const response = await axios.get("http://localhost:3001/api/task/get", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        params: {
+          sort: sortOption,
+          order: sortOrder,
         },
       });
       setTasks(response.data);
@@ -167,7 +185,7 @@ const AddTask: React.FC = () => {
         }
       );
       console.log("Task added successfully:", response.data);
-      fetchTasks(); // Fetch tasks again after adding a new task
+      fetchTasks();
     } catch (error) {
       console.error("Error adding task:", error);
     }
@@ -188,9 +206,9 @@ const AddTask: React.FC = () => {
   };
 
   const handleEditTask = async (taskId: number) => {
-    // Implement the edit functionality based on your requirements
     console.log("Edit task:", taskId);
   };
+
   const handleToggleTask = async (taskId: number, done: boolean) => {
     try {
       await axios.put(
@@ -203,11 +221,17 @@ const AddTask: React.FC = () => {
         }
       );
       console.log("Task status toggled successfully");
-      fetchTasks(); // Fetch tasks again after toggling the task status
+      fetchTasks();
     } catch (error) {
       console.error("Error toggling task status:", error);
     }
   };
+
+  const handleSortChange = (sortOption: string, sortOrder: string) => {
+    setSortOption(sortOption);
+    setSortOrder(sortOrder);
+  };
+
   return (
     <Container>
       <Heading>Add New Task</Heading>
@@ -250,7 +274,8 @@ const AddTask: React.FC = () => {
         tasks={tasks}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        onToggleTask={handleToggleTask} // Pass the new toggle function to TaskList
+        onToggleTask={handleToggleTask}
+        onSortChange={handleSortChange}
       />
     </Container>
   );

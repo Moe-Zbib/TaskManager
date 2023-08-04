@@ -12,6 +12,13 @@ exports.createTask = async (req, res) => {
   const user_id = req.user.userId;
 
   try {
+    const existingTask = await Task.getTaskByTitleAndUserId(title, user_id);
+    if (existingTask) {
+      return res
+        .status(400)
+        .json({ message: "Task with the same title already exists" });
+    }
+
     const task = await Task.createTask(
       user_id,
       title,
@@ -31,9 +38,30 @@ exports.createTask = async (req, res) => {
 
 exports.getTasks = async (req, res) => {
   const user_id = req.user.userId; // Assuming you have the authenticated user's ID in req.user
+  let sortOption = req.query.sort || "due_time"; // Default sort option is due_time
+  let sortOrder = req.query.order || "asc"; // Default sort order is ascending
 
   try {
-    const tasks = await Task.getTasksByUserId(user_id);
+    let tasks = await Task.getTasksByUserId(user_id);
+
+    switch (sortOption) {
+      case "due_time":
+        tasks =
+          sortOrder === "asc"
+            ? Task.sortByDueTimeAscending(tasks)
+            : Task.sortByDueTimeDescending(tasks);
+        break;
+      case "created_at":
+        tasks =
+          sortOrder === "asc"
+            ? Task.sortByCreationTimeAscending(tasks)
+            : Task.sortByCreationTimeDescending(tasks);
+        break;
+      default:
+        // If an invalid sort option is provided, default to sorting by due_time in ascending order
+        tasks = Task.sortByDueTimeAscending(tasks);
+    }
+
     res.json(tasks);
   } catch (error) {
     console.error("Error retrieving user tasks:", error);
