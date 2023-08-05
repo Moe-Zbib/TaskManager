@@ -3,7 +3,7 @@ const app = express();
 const helmet = require("helmet");
 const authRoutes = require("./Auth/authRoutes");
 const taskRoutes = require("./Tasks/taskRoutes");
-
+const userSearchRoutes = require("./UserSearch/userSearchRoutes");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
@@ -37,7 +37,7 @@ app.get("/dashboard", (req, res) => {
     res.redirect("/login");
   }
 });
-
+app.use("/api/user", userSearchRoutes);
 app.use("/api/task", taskRoutes);
 app.get("/api/test", async (req, res) => {
   try {

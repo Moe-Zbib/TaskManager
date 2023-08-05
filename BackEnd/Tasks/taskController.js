@@ -38,11 +38,15 @@ exports.createTask = async (req, res) => {
 
 exports.getTasks = async (req, res) => {
   const user_id = req.user.userId; // Assuming you have the authenticated user's ID in req.user
-  let sortOption = req.query.sort || "due_time"; // Default sort option is due_time
-  let sortOrder = req.query.order || "asc"; // Default sort order is ascending
+  const showPublic = req.query.showPublic || false; // Query parameter to filter public tasks
 
   try {
-    let tasks = await Task.getTasksByUserId(user_id);
+    let tasks = showPublic
+      ? await Task.getPublicTasksByUserId(user_id) // Get public tasks if showPublic is true
+      : await Task.getTasksByUserId(user_id); // Otherwise, get all tasks for the user
+
+    let sortOption = req.query.sort || "due_time"; // Default sort option is due_time
+    let sortOrder = req.query.order || "asc"; // Default sort order is ascending
 
     switch (sortOption) {
       case "due_time":
@@ -94,7 +98,7 @@ exports.getTaskById = async (req, res) => {
 };
 exports.updateTask = async (req, res) => {
   const { taskId } = req.params;
-  const user_id = req.user.userId; // Assuming you have the authenticated user's ID in req.user
+  const user_id = req.user.userId;
 
   try {
     const task = await Task.getTaskById(taskId);
@@ -103,13 +107,15 @@ exports.updateTask = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    const { title, description, done, due_time, side_notes } = req.body;
+    const { title, description, done, due_time, side_notes, is_public } =
+      req.body;
 
-    // Validate and sanitize the 'done' field
-    if (typeof done !== "boolean") {
-      return res
-        .status(400)
-        .json({ message: "'done' field must be a boolean value" });
+    // Validate and sanitize the 'done' and 'is_public' fields
+    const isValidBoolean = (value) => typeof value === "boolean";
+    if (!isValidBoolean(done) || !isValidBoolean(is_public)) {
+      return res.status(400).json({
+        message: "'done' and 'is_public' fields must be boolean values",
+      });
     }
 
     task.title = title;
@@ -117,6 +123,7 @@ exports.updateTask = async (req, res) => {
     task.done = done;
     task.due_time = due_time;
     task.side_notes = side_notes;
+    task.is_public = is_public;
 
     await task.updateTask();
 
@@ -126,6 +133,7 @@ exports.updateTask = async (req, res) => {
     res.status(500).json({
       message: "An error occurred while updating the task",
       errorType: error.name,
+      errorMessage: error.message,
     });
   }
 };
